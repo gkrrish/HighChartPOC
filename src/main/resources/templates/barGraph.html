@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Technology Line Graph</title>
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <!-- Optional theme -->
+    <link rel="stylesheet"
+          href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
+</head>
+<body>
+<div class="container">
+    <h2 align="center">Technology Line Graph</h2>
+    <div id="container" style="width: 550px; height: 400px; margin: 0 auto"></div>
+</div>
+
+<!-- Include jQuery and Highcharts library -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+
+<!-- Initialize Highcharts chart using Thymeleaf to pass data from Spring model -->
+<script th:inline="javascript">
+    $(function() {
+        // Extract data from Thymeleaf model attribute 'surveyMap'
+        var categories = /*[[${surveyMap.keySet()}]]*/ [];
+        var dataValues = /*[[${surveyMap.values()}]]*/ [];
+
+        // Convert dataValues to numeric array (Highcharts expects numeric values)
+        var numericDataValues = dataValues.map(function(value) {
+            return parseFloat(value);
+        });
+
+        // Render Highcharts chart
+        Highcharts.chart('container', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: 'Technology Popularity In India'
+            },
+            subtitle: {
+                text: 'All details are not true; it\'s a dummy map'
+            },
+            xAxis: {
+                categories: categories,
+                crosshair: true
+            },
+            yAxis: {
+                min: 0,
+                max: 100,
+                title: {
+                    text: 'Technology Rating (in %)'
+                }
+            },
+            tooltip: {
+                headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+                pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+                             '<td style="padding:0"><b>{point.y:.1f}%</b></td></tr>',
+                footerFormat: '</table>',
+                shared: true,
+                useHTML: true
+            },
+            plotOptions: {
+                column: {
+                    pointPadding: 0.2,
+                    borderWidth: 0
+                }
+            },
+            series: [{
+                name: 'Technology',
+                data: numericDataValues // Use the numeric data values
+            }]
+        });
+    });
+</script>
+
+</body>
+</html>
