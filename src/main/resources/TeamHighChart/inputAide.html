@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Tracker Form</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            height: 100vh;
+            margin: 0;
+        }
+        
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 50px;
+            overflow-y: auto;
+            max-height: 90vh;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .grid-container-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .grid-container-1 {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[readonly] {
+            background-color: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form id="taskForm">
+            <h2>Task Tracker Form</h2>
+            
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <select id="name" name="name" class="form-control" required>
+                    <option value="">Select Name</option>
+                    <option value="John Doe">John Doe</option>
+                    <option value="Jane Smith">Jane Smith</option>
+                </select>
+            </div>
+
+            <div id="populatedFields" class="grid-container">
+                <div class="form-group">
+                    <label for="empId">EmpId:</label>
+                    <input type="text" id="empId" name="empId" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email Address:</label>
+                    <input type="email" id="email" name="email" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="projectName">Project Name:</label>
+                    <input type="text" id="projectName" name="projectName" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="subProjectName">Sub Project Name:</label>
+                    <input type="text" id="subProjectName" name="subProjectName" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="reportingManager">Reporting Manager-1:</label>
+                    <input type="text" id="reportingManager" name="reportingManager" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="dlt2">DLT2:</label>
+                    <input type="text" id="dlt2" name="dlt2" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="department">Department:</label>
+                    <input type="text" id="department" name="department" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="teamName">Team Name:</label>
+                    <input type="text" id="teamName" name="teamName" class="form-control" readonly>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="sprintNumber">Sprint Number (mm/dd-mm/dd):</label>
+                <input type="text" id="sprintNumber" name="sprintNumber" class="form-control" readonly required>
+                <div class="d-flex">
+                    <input type="date" id="sprintStart" name="sprintStart" class="form-control" required>
+                    <span class="mx-2">to</span>
+                    <input type="date" id="sprintEnd" name="sprintEnd" class="form-control" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="date">Date:</label>
+                <input type="date" id="date" name="date" class="form-control" required>
+            </div>
+            
+            <div class="grid-container">
+                <div class="form-group">
+                    <label for="mainJiraTicket">Main Jira Ticket:</label>
+                    <input type="text" id="mainJiraTicket" name="mainJiraTicket" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="jiraSubTask">Jira Sub Task:</label>
+                    <input type="text" id="jiraSubTask" name="jiraSubTask" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="grid-container">
+                <div class="form-group">
+                    <label for="estimatedTime">Before (Estimated Time in minutes):</label>
+                    <input type="number" id="estimatedTime" name="estimatedTime" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="timeAfter">After (using Aide in minutes):</label>
+                    <input type="number" id="timeAfter" name="timeAfter" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="comments">Comments:</label>
+                <textarea id="comments" name="comments" class="form-control" required></textarea>
+            </div>
+            
+            <div class="grid-container-2">
+                <div class="form-group">
+                    <label for="timeSaved">Time Saved:</label>
+                    <input type="number" id="timeSaved" name="timeSaved" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="timeSavedPercentage">Time Saved (%):</label>
+                    <input type="number" id="timeSavedPercentage" name="timeSavedPercentage" class="form-control" readonly>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Submit</button>
+        </form>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const employeeData = {
+                "John Doe": {
+                    empId: "123",
+                    email: "john.doe@example.com",
+                    projectName: "Project Alpha",
+                    subProjectName: "Sub Project 1",
+                    reportingManager: "Manager A",
+                    dlt2: "DLT2A",
+                    department: "Development",
+                    teamName: "Team Alpha"
+                },
+                "Jane Smith": {
+                    empId: "124",
+                    email: "jane.smith@example.com",
+                    projectName: "Project Beta",
+                    subProjectName: "Sub Project 2",
+                    reportingManager: "Manager B",
+                    dlt2: "DLT2B",
+                    department: "QA",
+                    teamName: "Team Beta"
+                }
+            };
+
+            const nameSelect = document.getElementById('name');
+            const populatedFields = document.getElementById('populatedFields');
+            const taskForm = document.getElementById('taskForm');
+
+            nameSelect.addEventListener('change', (event) => {
+                const selectedName = event.target.value;
+                if (selectedName && employeeData[selectedName]) {
+                    const data = employeeData[selectedName];
+                    populatedFields.querySelector('#empId').value = data.empId;
+                    populatedFields.querySelector('#email').value = data.email;
+                    populatedFields.querySelector('#projectName').value = data.projectName;
+                    populatedFields.querySelector('#subProjectName').value = data.subProjectName;
+                    populatedFields.querySelector('#reportingManager').value = data.reportingManager;
+                    populatedFields.querySelector('#dlt2').value = data.dlt2;
+                    populatedFields.querySelector('#department').value = data.department;
+                    populatedFields.querySelector('#teamName').value = data.teamName;
+                }
+            });
+
+            document.getElementById('estimatedTime').addEventListener('input', calculateTimeSaved);
+            document.getElementById('timeAfter').addEventListener('input', calculateTimeSaved);
+
+            function calculateTimeSaved() {
+                const estimatedTime = parseFloat(document.getElementById('estimatedTime').value) || 0;
+                const timeAfter = parseFloat(document.getElementById('timeAfter').value) || 0;
+
+                const timeSaved = estimatedTime - timeAfter;
+                const timeSavedPercentage = estimatedTime !== 0 ? ((timeSaved / estimatedTime) * 100).toFixed(2) : 0;
+
+                document.getElementById('timeSaved').value = timeSaved;
+                document.getElementById('timeSavedPercentage').value = timeSavedPercentage;
+            }
+
+            taskForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                alert("Form Submitted Successfully!");
+            });
+        });
+    </script>
+</body>
+</html>
