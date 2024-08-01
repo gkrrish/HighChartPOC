@@ -60,6 +60,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <form id="taskForm">
@@ -168,6 +169,7 @@
         </form>
     </div>
 
+	
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
@@ -234,6 +236,36 @@
                 alert("Form Submitted Successfully!");
             });
         });
+		
+		async function submitForm(event) {
+		        event.preventDefault();
+		        const formData = new FormData(taskForm);
+		
+		        const data = {};
+		        formData.forEach((value, key) => {
+		            data[key] = value;
+		        });
+		
+		        try {
+		            const response = await fetch('http://localhost:3000/addRecord', {
+		                method: 'POST',
+		                headers: {
+		                    'Content-Type': 'application/json',
+		                },
+		                body: JSON.stringify(data),
+		            });
+		
+		            if (response.ok) {
+		                alert("Record added successfully!");
+		            } else {
+		                throw new Error('Failed to add record');
+		            }
+		        } catch (error) {
+		            alert(error.message);
+		        }
+		    }
+		
+		    taskForm.addEventListener('submit', submitForm);
     </script>
 </body>
 </html>

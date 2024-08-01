@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Data Visualization</title>
+    <!-- Include SheetJS library -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
+    <!-- Include Highcharts library -->
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script src="https://code.highcharts.com/modules/export-data.js"></script>
+    <!-- Include jQuery library for easier DOM manipulation -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            font-size: 1.5em;
+        }
+        #fileInput, #filePathInput, #teamDropdown {
+            margin: 10px;
+            width: 200px;
+        }
+        .chart-container {
+            width: 70%;
+            max-width: 1000px;
+            padding: 10px;
+            margin: 10px 0;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            background-color: #fff;
+        }
+        .chart {
+            height: 300px;
+            width: 100%;
+        }
+        .minimum-hours-text {
+            color: red;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload Excel File or Provide Path</h1>
+    <input type="file" id="fileInput" />
+    <input type="text" id="filePathInput" placeholder="Enter shared path link" />
+    <button onclick="handlePath()">Load from Path</button>
+    <select id="teamDropdown" onchange="filterByTeam()">
+        <option value="all">All Teams</option>
+    </select>
+    <div class="minimum-hours-text" id="minimumHoursText"></div>
+    <div class="chart-container">
+        <div id="overallChart" class="chart"></div>
+    </div>
+    <div class="chart-container">
+        <div id="combinedChart" class="chart"></div>
+    </div>
+    
+    <script>
+        let originalData;
+
+        document.getElementById('fileInput').addEventListener('change', handleFile, false);
+
+        function handleFile(e) {
+            const files = e.target.files;
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                originalData = processData(jsonData);
+                populateTeamDropdown(originalData.teams);
+                filterByTeam();
+            };
+
+            reader.readAsArrayBuffer(files[0]);
+        }
+
+        function handlePath() {
+            const filePath = document.getElementById('filePathInput').value;
+            if (filePath) {
+                fetch(filePath)
+                    .then(response => response.arrayBuffer())
+                    .then(data => {
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                        originalData = processData(jsonData);
+                        populateTeamDropdown(originalData.teams);
+                        filterByTeam();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching the file:', error);
+                    });
+            }
+        }
+
+        function populateTeamDropdown(teams) {
+            const dropdown = document.getElementById('teamDropdown');
+            dropdown.innerHTML = '<option value="all">All Teams</option>';
+            teams.forEach(team => {
+                const option = document.createElement('option');
+                option.value = team;
+                option.textContent = team;
+                dropdown.appendChild(option);
+            });
+        }
+
+        function filterByTeam() {
+            const selectedTeam = document.getElementById('teamDropdown').value;
+            const filteredData = selectedTeam === 'all' ? originalData.users : originalData.users.filter(user => user.team === selectedTeam);
+            createOverallChart(originalData.aggregated);
+            createCombinedChart(filteredData);
+        }
+
+        function processData(data) {
+            const headers = data[0];
+            const rows = data.slice(1);
+
+            let totalBefore = 0;
+            let totalAfter = 0;
+            let userMap = {};
+            let teams = new Set();
+
+            rows.forEach(row => {
+                const name = row[headers.indexOf('Name')];
+                const team = row[headers.indexOf('Team')];
+                const before = row[headers.indexOf('Before (Estimated Time in minutes)')];
+                const after = row[headers.indexOf('After (using Aide ) in minutes')];
+
+                teams.add(team);
+
+                if (!userMap[team]) {
+                    userMap[team] = {};
+                }
+
+                if (!userMap[team][name]) {
+                    userMap[team][name] = {
+                        before: 0,
+                        after: 0
+                    };
+                }
+
+                userMap[team][name].before += before;
+                userMap[team][name].after += after;
+
+                totalBefore += before;
+                totalAfter += after;
+            });
+
+            const totalTimeSaved = totalBefore - totalAfter;
+
+            let userArray = [];
+            for (let team in userMap) {
+                for (let user in userMap[team]) {
+                    const userBefore = userMap[team][user].before / 60; // Convert minutes to hours
+                    const userAfter = userMap[team][user].after / 60; // Convert minutes to hours
+                    const userTimeSaved = userBefore - userAfter;
+
+                    userArray.push({
+                        team: team,
+                        name: user,
+                        before: userBefore,
+                        after: userAfter,
+                        timeSaved: userTimeSaved
+                    });
+                }
+            }
+
+            // Sort users by time saved in descending order
+            userArray.sort((a, b) => b.timeSaved - a.timeSaved);
+
+            return {
+                aggregated: {
+                    totalBefore: totalBefore / 60, // Convert minutes to hours
+                    totalAfter: totalAfter / 60, // Convert minutes to hours
+                    totalTimeSaved: totalTimeSaved / 60 // Convert minutes to hours
+                },
+                users: userArray,
+                teams: Array.from(teams)
+            };
+        }
+
+        function createOverallChart(data) {
+            const minRequiredHours = 2; // Minimum required hours saved per day
+            const minRequiredHoursTotal = minRequiredHours * 30 * originalData.users.length / 60; // Adjust calculation as per your requirement
+
+            document.getElementById('minimumHoursText').textContent = `Minimum Required Hours Saved per User per Day: ${minRequiredHours} hours (${minRequiredHoursTotal.toFixed(2)} hours total)`;
+
+            Highcharts.chart('overallChart', {
+                chart: {
+                    type: 'column'
+                },
+                title: {
+                    text: 'Overall Team Savings'
+                },
+                xAxis: {
+                    categories: ['Before (Hours)', 'After (Hours)', 'Time Saved (Hours)'],
+                    title: {
+                        text: 'Metrics'
+                    }
+                },
+                yAxis: {
+                    min: 0,
+                    title: {
+                        text: 'Hours'
+                    },
+                    plotLines: [{
+                        value: minRequiredHoursTotal,
+                        color: 'red',
+                        width: 2,
+                        label: {
+                            text: `Minimum Required Hours Saved: ${minRequiredHoursTotal.toFixed(2)} hours`,
+                            align: 'right',
+                            style: {
+                                color: 'red'
+                            }
+                        }
+                    }]
+                },
+                series: [{
+                    name: 'Overall Team',
+                    data: [data.totalBefore, data.totalAfter, data.totalTimeSaved],
+                    pointWidth: 15, // Adjust the bar width here
+                    dataLabels: {
+                        enabled: true,
+                        format: '{y:.2f} hrs'
+                    },
+                    colorByPoint: true,
+                    colors: ['#1E90FF', '#33FF57', '#3357FF'] // Brighter colors for bars
+                }]
+            });
+        }
+
+        function createCombinedChart(users) {
+            let userNames = users.map(user => user.name);
+            let beforeData = users.map(user => user.before);
+            let afterData = users.map(user => user.after);
+            let timeSavedData = users.map(user => user.timeSaved);
+
+            Highcharts.chart('combinedChart', {
+                chart: {
+                    type: 'column'
+                },
+                title: {
+                    text: 'Individual User Savings'
+                },
+                xAxis: {
+                    categories: userNames,
+                    title: {
+                        text: 'Users'
+                    },
+                    labels: {
+                        rotation: -45,
+                        style: {
+                            fontSize: '10px',
+                            fontFamily: 'Verdana, sans-serif'
+                        }
+                    }
+                },
+                yAxis: {
+                    min: 0,
+                    title: {
+                        text: 'Hours'
+                    },
+                    plotLines: [{
+                        value: 2,
+                        color: 'red',
+                        width: 2,
+                        label: {
+                            text: 'Minimum Required Hours Saved per Day',
+                            align: 'right',
+                            style: {
+                                color: 'red'
+                            }
+                        }
+                    }]
+                },
+                plotOptions: {
+                    column: {
+                        pointPadding: 0.1,
+                        borderWidth: 0,
+                        dataLabels: {
+                            enabled: true,
+                            format: '{y:.2f} hrs'
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Before (Hours)',
+                    data: beforeData,
+                    pointWidth: 10 // Adjust the bar width here
+                }, {
+                    name: 'After (Hours)',
+                    data: afterData,
+                    pointWidth: 10 // Adjust the bar width here
+                }, {
+                    name: 'Time Saved (Hours)',
+                    data: timeSavedData,
+                    pointWidth: 10 // Adjust the bar width here
+                }]
+            });
+        }
+    </script>
+</body>
+</html>
